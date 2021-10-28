@@ -1,18 +1,72 @@
 ---
-title: "R Notebook"
+title: "Faktory ovplyvňujúce šťastie"
 output: html_notebook
 ---
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+# Predstavenie datasetu
 
 ```{r}
-plot(cars)
+# Libraries
+library(tidyverse)
+library(dplyr)
+library(rmarkdown)
+# Read dataset
+df <- read_csv(file = "data/world-happiness-report.csv", col_names = T)
+nrow(df)
+```
+Stĺpce v našom datasete sú:
+
+```{r}
+head(df)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+# Stĺpce
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+Z nich sme si vybrali na analýzu nasledovné:
+Lile Ladder - indikdátor skóre štastia v intervale od 0 - 10, čím vyššie číslo tým štastneší človek.
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+- GDP Per Capita
+- Healthy Life Expectancy
+- Social Support
+- Freedom to Make Life Choices
+- Generosity
+- Perceptions of Corruption 
+- Possitive effect
+- Negative effect
+
+```{r}
+#  Mean value of all countries per year
+df  %>% 
+  select(`Country name`, `Life Ladder`, `Log GDP per capita`, `Social support`, year) %>%
+  group_by(year) %>%
+  summarize(Mean = mean(`Life Ladder`), na.rm = TRUE) %>%
+  arrange(desc(Mean))
+  
+```
+
+```{r}
+#
+```
+Analyza dat
+
+- Zakladne deskriptivne statistiky (priemer, modus, median, rozplyl)
+- anomálie 
+- pre roky zvlášť
+- pre krajiny zvlášť
+- klasifikovat do regionov na zaklade druheho datasetu (pridat region)
+- zobrazit na mape 
+- opis stlpcov
+- https://cheatography.com/xeonkai/cheat-sheets/exploratory-data-analysis-in-r/
+- https://cran.r-project.org/web/packages/dlookr/vignettes/EDA.html
+- najst chybajuce hodnoty ak existuju
+- Calculating descriptive statistics using describe()
+- normality diagnosis
+- korelacia
+- plot correlate
+
+
+## 2. bod
+- https://docs.google.com/presentation/d/1lUCI3UF4lJyJ5Bx7B4I1IhgabXYN_fns/edit#slide=id.p2
+- Stanovenie hypotezy
+- crossvalidacia 
+- rozptyl beta1 beta2
+
