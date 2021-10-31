@@ -1,6 +1,8 @@
 ---
 title: "Faktory ovplyvňujúce šťastie"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 # Predstavenie datasetu
 
@@ -8,6 +10,7 @@ output: html_notebook
 # Libraries
 library(tidyverse)
 library(dplyr)
+library(Hmisc)
 library(rmarkdown)
 # Read dataset
 df <- read_csv(file = "data/world-happiness-report.csv", col_names = T)
@@ -22,8 +25,7 @@ head(df)
 # Stĺpce
 
 Z nich sme si vybrali na analýzu nasledovné:
-Lile Ladder - indikdátor skóre štastia v intervale od 0 - 10, čím vyššie číslo tým štastneší človek.
-
+- Lile Ladder - indikdátor skóre štastia v intervale od 0 - 10, čím vyššie číslo tým štastneší človek.
 - GDP Per Capita
 - Healthy Life Expectancy
 - Social Support
@@ -34,7 +36,7 @@ Lile Ladder - indikdátor skóre štastia v intervale od 0 - 10, čím vyššie 
 - Negative effect
 
 ```{r}
-#  Mean value of all countries per year
+#  Mean value of all countries per year\
 df  %>% 
   select(`Country name`, `Life Ladder`, `Log GDP per capita`, `Social support`, year) %>%
   group_by(year) %>%
@@ -44,11 +46,26 @@ df  %>%
 ```
 
 ```{r}
-#
+df %>% select(`Country name`, `Life Ladder`, `Log GDP per capita`, `Social support` ) %>% group_by(`Country name`) %>% summarise_all(funs(mean),na.rm=TRUE)
 ```
+
+
+```{r}
+df %>% select(`Country name`, `Life Ladder`, `Log GDP per capita`, `Social support` ) %>% group_by(`Country name`) %>% summarise_all(funs(median),na.rm=TRUE) %>% 
+arrange(`Life Ladder`)
+```
+
+
+```{r}
+data <- df %>% select(`Country name`, `Life Ladder`, `Log GDP per capita`, `Social support` ) %>% group_by(`Country name`)
+
+cor(select_if(data, is.numeric), method = c("spearman"))
+```
+
+
 Analyza dat
 
-- Zakladne deskriptivne statistiky (priemer, modus, median, rozplyl)
+- Zakladne deskriptivne statistiky (priemer, modus, median, rozplyl) 
 - anomálie 
 - pre roky zvlášť
 - pre krajiny zvlášť
@@ -62,6 +79,11 @@ Analyza dat
 - normality diagnosis
 - korelacia
 - plot correlate
+- https://www.kaggle.com/nilufarhosseini/data-visualisation-and-forecasting-usning-r/notebook
+- 
+
+Hypotezy: 
+- 
 
 
 ## 2. bod
