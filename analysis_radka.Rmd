@@ -1,0 +1,180 @@
+---
+title: "Faktory ovplyvňujúce šťastie"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+V poslednom období rokov 2021 a 2020 sa mnoho vecí zmenilo, od spôsobu ako sa komunikuje, študuje alebo chodí nakupovať, ľudia majú tendenciu sa podmienkam ľahko prispôsobovať, čo môže v konečnom dôsledku byť aj prispôsobovanie sa negatívnym podmienkam. 
+```{r}
+# Libraries
+library(gmodels)
+library(tidyverse)
+library(dplyr)
+library(countrycode)
+library(magrittr)
+library(corrplot)
+library(ggplot2)
+```
+
+# Analýza dát
+
+## Načítanie datasetu
+```{r}
+df <- read_csv(file = "data/world-happiness-report-merged.csv", col_names = T)
+```
+
+
+## Dáta
+
+### Predstavenie
+```{r}
+options(max.print=20)
+attributes(df)
+```
+V nami zvolenom dátovom rámci je možné vidieť, že obsahuje 11 sĺpcov a 1949 riadkov, ktoré je možné ďalej analyzovať.
+
+Charakteristika stĺpcov je nasledovná
+- Life Ladder: Indikátor skóre štastia ktoré má rozsah 0 - 10, čím vyššie skóre tým sú ľudia štastnejší.
+
+
+- **GDP Per Capita**: Reprezentácia štandardného života ľudia, ktorá popisuje výhody získavané ľudmi z ekonomiky krajiny.
+
+
+- **Healthy Life Expectancy**: Primerný vek ľudí danej 
+
+
+- **Social Support**: Priemer binárnych odpovedí (0, 1) na otázku či sa je na koho spoľahnút v zlej situácii.
+
+
+- **Freedom to Make Life Choices**: Národný priemer odpovedí na otázku ohľadom ich svojvoľnosti robiť čo chcú v živote.
+
+
+- **Generosity**: Zvyšok regresie na národného priemeru na otázku "Prispievali ste peniaze na charitu v poslednom
+mesiaci?".
+
+
+- **Perceptions of Corruption**: Národý priemer odpovedí z dotazníku na otázku, v ktorej sa zistovalo, či daný ľudia prispievali peniaze na charitu za posledný mesiac.
+
+
+- **Possitive effect**: Priemer troch pozitívnych meraní na premerné pocity v minulom roku (štastie, smiech, radosť).
+
+
+- **Negative effect**: Priemer troch negatívnych meraní na premerné pocity v minulom roku (starosti, smútok, hnev).
+
+### Premenovanie a úprava stĺpcov
+```{r}
+df <- df %>% 
+  rename(Country = `Country name`,
+         Ladder = `Life Ladder`,
+         GDP = `Log GDP per capita`,
+         Support = `Social support`,
+         Expectancy = `Healthy life expectancy at birth`,
+         Chocies = `Freedom to make life choices`,
+         Corruption = `Perceptions of corruption`,
+         Positive = `Positive affect`,
+         Negative = `Negative affect`
+         )
+df$Continent <- countrycode(sourcevar = df$Country, origin = 'country.name', destination = 'continent')
+df$Continent
+
+# Addinng continent to unmatched county Kosovo
+df[df$Country == 'Kosovo',] %<>% mutate(Continent = 'Europe')
+
+df %>% filter(Country == 'Kosovo')
+```
+### Korelacia atribútov
+```{r}
+numeric_variables <- select_if( df %>% select(-year), is.numeric)
+M<-cor(numeric_variables, use='complete.obs')
+
+corrplot(M)
+M
+```
+### Maximá, minimám, hodnoty
+```{r}
+hap <- df %>% 
+  filter(year == 2021) %>%
+  arrange(desc(Ladder))
+  
+sad <- hap <- df %>% 
+  filter(year == 2021) %>%
+  arrange(Ladder)
+
+
+par(mfrow=c(1,2)) 
+
+
+ggplot(hap[1:10,], aes(x = reorder(Country, Ladder), y = Ladder, fill = Country)) + 
+  geom_bar(stat = "identity") + 
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+
+ggplot(sad[1:10,], aes(x = reorder(Country, desc(Ladder)), y = Ladder, fill = Country)) + 
+  geom_bar(stat = "identity") + 
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+```
+
+```{r}
+df %>%
+  group_by(Continent) %>%
+  summarise(mean = mean(Ladder)) %>%
+  ggplot(aes(reorder(Continent, mean), mean)) + 
+  geom_point()
+```
+
+
+```{r}
+options(repr.plot.width=16, repr.plot.height = 8)
+ggplot(df, aes(x=GDP, y=Ladder, color=Continent))+
+  geom_point() +
+  facet_wrap(~Continent)
+  
+```
+
+
+
+- Zakladne deskriptivne statistiky (priemer, modus, median, rozplyl)
+- anomálie 
+- pre roky zvlášť
+- pre krajiny zvlášť
+- klasifikovat do regionov na zaklade druheho datasetu (pridat region)
+- zobrazit na mape 
+- opis stlpcov
+- https://cheatography.com/xeonkai/cheat-sheets/exploratory-data-analysis-in-r/
+- https://cran.r-project.org/web/packages/dlookr/vignettes/EDA.html
+- najst chybajuce hodnoty ak existuju
+- Calculating descriptive statistics using describe()
+- normality diagnosis
+- korelacia
+- plot correlate
+
+
+## 2. bod
+- https://docs.google.com/presentation/d/1lUCI3UF4lJyJ5Bx7B4I1IhgabXYN_fns/edit#slide=id.p2
+- Stanovenie hypotezy
+- crossvalidacia 
+- rozptyl beta1 beta2
+
+
+```{r}
+fit <- lm(formula= Ladder ~ GDP, data=df)
+summary(fit)
+
+ss <- map(1:30, ~df[sort(sample(1:dim(df)[1], size=0.3*dim(df)[1])),])
+models <- map(ss, ~lm(.x$Ladder ~.x$GDP))
+listOfFunstions <- list(coefficients=coef, residuals=residuals)
+f <- function(x){sapply(listOfFunstions,function(g) g(x))}
+extractedData <- map(models, ~f(.x))
+
+sd(map_dbl(models, ~coef(.x)[1]))
+sd(map_dbl(models, ~coef(.x)[2]))
+
+rss <- map_dbl(models, ~sum(resid(.x)^2))
+rse <- map_dbl(rss, ~sqrt(.x/(0.5*dim(df)[1]-2)))
+
+par(mfrow=c(1,2)) 
+boxplot(rss)
+boxplot(rse)
+```
+

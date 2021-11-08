@@ -80,11 +80,8 @@ Analyza dat
 - korelacia
 - plot correlate
 - https://www.kaggle.com/nilufarhosseini/data-visualisation-and-forecasting-usning-r/notebook
-- 
 
 Hypotezy: 
-- 
-
 
 ## 2. bod
 - https://docs.google.com/presentation/d/1lUCI3UF4lJyJ5Bx7B4I1IhgabXYN_fns/edit#slide=id.p2
